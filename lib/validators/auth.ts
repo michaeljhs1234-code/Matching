@@ -4,7 +4,7 @@ export const signUpSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
   student_id: z
     .string()
-    .regex(/^\d{8}$/, '학번은 8자리 숫자여야 합니다'),
+    .regex(/^\d{10}$/, '학번은 10자리 숫자여야 합니다'),
   department_id: z
     .number()
     .int()

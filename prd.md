@@ -91,7 +91,7 @@
   So that 재학생만 이용 가능한 신뢰도 높은 커뮤니티에 접근할 수 있다.
   Acceptance Criteria:
     - @chungbuk.ac.kr 도메인 이메일만 허용
-    - 학번 8자리 형식 검증
+    - 학번 10자리 형식 검증
     - 이메일 인증 링크 발송 및 확인 후 가입 완료
 
 [US-02] 스포츠 매칭 참가
@@ -173,7 +173,7 @@
 
 ```
 Step 1  이름 입력
-Step 2  학번 입력 (8자리 숫자, 중복 불가)
+Step 2  학번 입력 (10자리 숫자, 중복 불가)
 Step 3  학과 선택 (departments 테이블 드롭다운)
 Step 4  학교 이메일 입력 (@chungbuk.ac.kr 강제, 중복 불가)
 Step 5  Supabase Auth → 인증 이메일 자동 발송
@@ -213,7 +213,7 @@ Step 8  종목별 티어 초기 설정 (선택, 이후 마이페이지에서 변
 | 규칙 | 구현 위치 |
 |------|-----------|
 | `@chungbuk.ac.kr` 도메인만 허용 | 서버 사이드(Server Action) + DB CHECK |
-| 학번 8자리 형식 강제 | 클라이언트 정규식 + 서버 검증 |
+| 학번 10자리 형식 강제 | 클라이언트 정규식 + 서버 검증 |
 | 학번 중복 가입 불가 | `student_id UNIQUE` 제약 |
 | 이메일 인증 전 핵심 기능 접근 차단 | `middleware.ts` 리다이렉트 |
 
@@ -590,7 +590,7 @@ CREATE TABLE departments (
 CREATE TABLE users (
   id                  UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name                TEXT        NOT NULL,
-  student_id          VARCHAR(10) NOT NULL UNIQUE,         -- 충북대 학번 (8자리)
+  student_id          VARCHAR(10) NOT NULL UNIQUE,         -- 충북대 학번 (10자리)
   department_id       INTEGER     REFERENCES departments(id),
   email               TEXT        NOT NULL UNIQUE,          -- @chungbuk.ac.kr
   email_verified      BOOLEAN     NOT NULL DEFAULT false,

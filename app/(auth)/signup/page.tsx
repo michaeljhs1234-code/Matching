@@ -189,8 +189,8 @@ export default function SignUpPage() {
                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       {...register('student_id')}
-                      placeholder="12345678 (8자리)"
-                      maxLength={8}
+                      placeholder="2022026033 (10자리)"
+                      maxLength={10}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all"
                       style={{ background: 'rgba(15,15,26,0.8)', borderColor: errors.student_id ? '#ef4444' : '#1e293b', color: '#f1f5f9' }}
                     />
