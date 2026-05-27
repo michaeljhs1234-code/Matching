@@ -109,7 +109,7 @@ export default function SignUpPage() {
     }
 
     setEmailSent(true)
-    router.push('/auth/verify')
+    router.push('/verify')
   }
 
   if (emailSent) {
@@ -361,7 +361,7 @@ export default function SignUpPage() {
           <div className="mt-6 text-center">
             <p className="text-slate-400 text-sm">
               이미 계정이 있으신가요?{' '}
-              <Link href="/auth/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
                 로그인
               </Link>
             </p>

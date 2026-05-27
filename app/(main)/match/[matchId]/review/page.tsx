@@ -14,7 +14,7 @@ export default async function MatchReviewPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // 매치 정보 가져오기

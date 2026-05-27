@@ -15,7 +15,7 @@ export default async function ReportDetailPage({ params }: Props) {
 
   // 권한 체크
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/login')
 
   // 신고 상세 정보
   const { data: report } = await supabase

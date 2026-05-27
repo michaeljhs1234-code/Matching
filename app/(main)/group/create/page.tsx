@@ -20,7 +20,7 @@ export default function CreateGroupPage() {
 
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/auth/login'); return }
+    if (!user) { router.push('/login'); return }
 
     const { data, error: dbError } = await (supabase.from('groups') as any)
       .insert({ name: name.trim(), host_user_id: user.id })

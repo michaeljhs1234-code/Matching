@@ -106,7 +106,7 @@ export default function MatchLobbyPage() {
   }, [matchId, sportId, fetchData, router])
 
   const handleJoin = async () => {
-    if (!currentUserId) { router.push('/auth/login'); return }
+    if (!currentUserId) { router.push('/login'); return }
     setActionLoading(true)
     const supabase = createClient()
 

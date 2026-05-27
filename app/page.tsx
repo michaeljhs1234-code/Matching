@@ -24,13 +24,13 @@ export default function LandingPage() {
         <div className="text-2xl font-black gradient-text">CBNU MATCH</div>
         <div className="flex items-center gap-3">
           <Link
-            href="/auth/login"
+            href="/login"
             className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
           >
             로그인
           </Link>
           <Link
-            href="/auth/signup"
+            href="/signup"
             className="px-5 py-2 rounded-xl text-sm font-semibold text-white btn-glow transition-all"
             style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
           >
@@ -60,7 +60,7 @@ export default function LandingPage() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/auth/signup"
+            href="/signup"
             className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-white text-lg btn-glow"
             style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
           >
@@ -68,7 +68,7 @@ export default function LandingPage() {
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link
-            href="/auth/login"
+            href="/login"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-slate-300 hover:text-white glass border border-slate-700/50 hover:border-slate-500/50 transition-all"
           >
             로그인

@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
 
   if ((isProtected || isAdminPath) && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/login'
     url.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(url)
   }

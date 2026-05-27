@@ -33,7 +33,7 @@ export default function LoginPage() {
         setServerError('이메일 또는 비밀번호가 올바르지 않습니다.')
       } else if (error.message.includes('Email not confirmed')) {
         setServerError('이메일 인증을 먼저 완료해주세요.')
-        router.push('/auth/verify')
+        router.push('/verify')
       } else {
         setServerError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
       }
@@ -146,7 +146,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-slate-400 text-sm">
               계정이 없으신가요?{' '}
-              <Link href="/auth/signup" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium">
                 회원가입
               </Link>
             </p>

@@ -10,7 +10,7 @@ export default async function ProfilePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('users')
@@ -40,13 +40,13 @@ export default async function ProfilePage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-black text-white">프로필</h1>
-        <form action="/auth/signout" method="POST">
+        <form action="/signout" method="POST">
           <button
             formAction={async () => {
               'use server'
               const supabase2 = await createClient()
               await supabase2.auth.signOut()
-              redirect('/auth/login')
+              redirect('/login')
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass border border-red-500/20 text-red-400 hover:text-red-300 text-xs transition-all"
           >

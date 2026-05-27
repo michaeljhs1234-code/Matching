@@ -83,7 +83,7 @@ export default function VerifyPage() {
           </button>
 
           <div className="mt-6 pt-6 border-t border-slate-700/50">
-            <Link href="/auth/login" className="text-slate-400 hover:text-white text-sm transition-colors">
+            <Link href="/login" className="text-slate-400 hover:text-white text-sm transition-colors">
               로그인 페이지로 돌아가기
             </Link>
           </div>

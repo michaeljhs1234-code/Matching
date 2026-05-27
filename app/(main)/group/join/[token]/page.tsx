@@ -12,7 +12,7 @@ export default async function GroupJoinPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/auth/login?callbackUrl=/group/join/${token}`)
+  if (!user) redirect(`/login?callbackUrl=/group/join/${token}`)
 
   const { data: group } = await supabase
     .from('groups')

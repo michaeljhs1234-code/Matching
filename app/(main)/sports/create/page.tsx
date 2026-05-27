@@ -55,7 +55,7 @@ export default function CreateMatchPage() {
     setServerError('')
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/auth/login'); return }
+    if (!user) { router.push('/login'); return }
 
     const { data: match, error } = await (supabase.from('matches') as any)
       .insert({
