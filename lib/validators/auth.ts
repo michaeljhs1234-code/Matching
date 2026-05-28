@@ -11,8 +11,7 @@ export const signUpSchema = z.object({
     .positive('학과를 선택해주세요'),
   email: z
     .string()
-    .email('올바른 이메일 형식이 아닙니다')
-    .endsWith('@chungbuk.ac.kr', '충북대학교 이메일(@chungbuk.ac.kr)만 사용 가능합니다'),
+    .email('올바른 이메일 형식이 아닙니다'),
   password: z
     .string()
     .min(8, '비밀번호는 8자 이상이어야 합니다')

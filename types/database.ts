@@ -361,6 +361,32 @@ export interface Database {
           created_at?: string
         }
       }
+      match_messages: {
+        Row: {
+          id: number
+          match_id: string
+          sender_id: string
+          content: string
+          is_deleted: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          match_id: string
+          sender_id: string
+          content: string
+          is_deleted?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          match_id?: string
+          sender_id?: string
+          content?: string
+          is_deleted?: boolean
+          created_at?: string
+        }
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

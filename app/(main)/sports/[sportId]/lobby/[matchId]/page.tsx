@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Users, MapPin, Clock, ChevronLeft, Loader2, Zap, LogOut } from 'lucide-react'
+import { Users, MapPin, Clock, ChevronLeft, Loader2, Zap, LogOut, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import TierBadge from '@/components/common/TierBadge'
 import StatusBadge from '@/components/common/StatusBadge'
@@ -326,6 +326,22 @@ export default function MatchLobbyPage() {
             style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
           >
             팀 배정 결과 보기
+          </Link>
+        )}
+
+        {/* 채팅(쪽지) 바로가기 - 참가자 또는 호스트 */}
+        {(isJoined || isHost) && (
+          <Link
+            href={`/match/${matchId}`}
+            className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all text-sm"
+            style={{
+              background: 'rgba(79,70,229,0.1)',
+              border: '1px solid rgba(79,70,229,0.3)',
+              color: '#818cf8',
+            }}
+          >
+            <MessageCircle className="w-4 h-4" />
+            매치 채팅방 열기
           </Link>
         )}
       </div>
