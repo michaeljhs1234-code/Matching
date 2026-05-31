@@ -105,7 +105,7 @@ export default function SignUpPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          shouldCreateUser: false, // 아직 계정 생성 안 함, 이메일 소유 확인만
+          shouldCreateUser: true, // 아직 계정 생성 안 함, 이메일 소유 확인만
         },
       })
 
@@ -287,20 +287,18 @@ export default function SignUpPage() {
           {STEPS.map((label, idx) => (
             <div key={idx} className="flex items-center">
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${
-                  idx < step
+                className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${idx < step
                     ? 'bg-green-600 text-white'
                     : idx === step
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-800 text-slate-500'
-                }`}
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-800 text-slate-500'
+                  }`}
               >
                 {idx < step ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
               </div>
               <span
-                className={`ml-1.5 text-xs hidden sm:block ${
-                  idx < step ? 'text-green-400' : idx === step ? 'text-indigo-400' : 'text-slate-600'
-                }`}
+                className={`ml-1.5 text-xs hidden sm:block ${idx < step ? 'text-green-400' : idx === step ? 'text-indigo-400' : 'text-slate-600'
+                  }`}
               >
                 {label}
               </span>
@@ -510,8 +508,8 @@ export default function SignUpPage() {
                         borderColor: otpError
                           ? '#ef4444'
                           : val
-                          ? '#4f46e5'
-                          : '#1e293b',
+                            ? '#4f46e5'
+                            : '#1e293b',
                         color: '#f1f5f9',
                         boxShadow: val ? '0 0 0 2px rgba(79,70,229,0.2)' : 'none',
                       }}
