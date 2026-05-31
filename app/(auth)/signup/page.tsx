@@ -18,7 +18,7 @@ interface Department {
   name: string
 }
 
-const STEPS = ['기본 정보', '이메일', 'OTP 인증', '비밀번호']
+const STEPS = ['기본 정보', '이메일 & 비밀번호', 'OTP 인증']
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -27,6 +27,7 @@ export default function SignUpPage() {
   const [colleges, setColleges] = useState<string[]>([])
   const [selectedCollege, setSelectedCollege] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [serverError, setServerError] = useState('')
 
   // OTP 관련 상태
@@ -34,7 +35,6 @@ export default function SignUpPage() {
   const [otpSent, setOtpSent] = useState(false)
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', ''])
   const [otpVerifying, setOtpVerifying] = useState(false)
-  const [otpVerified, setOtpVerified] = useState(false)
   const [otpError, setOtpError] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -90,40 +90,36 @@ export default function SignUpPage() {
     if (ok) setStep(1)
   }
 
-  // Step 1→2: 이메일 유효성 검사 후 OTP 발송
+  // Step 1→2: 이메일+비밀번호 유효성 검사 후 signUp & OTP 발송
   const handleSendOtp = async () => {
-    const ok = await trigger(['email'])
+    const ok = await trigger(['email', 'password', 'confirmPassword'])
     if (!ok) return
 
     const email = getValues('email')
+    const password = getValues('password')
     setOtpSending(true)
     setServerError('')
     setOtpError('')
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signUp({
         email,
-        options: {
-          shouldCreateUser: true, // 아직 계정 생성 안 함, 이메일 소유 확인만
-        },
+        password,
       })
 
       if (error) {
-        // "Email not confirmed" 등의 에러는 OTP가 발송됐다는 뜻
-        // 실제로 OTP는 발송됨
-        if (
-          error.message.includes('Email not confirmed') ||
-          error.message.includes('over_email_send_rate_limit')
-        ) {
-          if (error.message.includes('over_email_send_rate_limit')) {
-            setServerError('이메일 전송 한도를 초과했습니다. 잠시 후 다시 시도해주세요.')
-            setOtpSending(false)
-            return
-          }
+        if (error.message.includes('over_email_send_rate_limit')) {
+          setServerError('이메일 전송 한도를 초과했습니다. 잠시 후 다시 시도해주세요.')
+          setOtpSending(false)
+          return
         }
-        // shouldCreateUser:false 에서 "User not found" 는 정상 - OTP는 발송됨
-        // Supabase는 미가입 이메일도 OTP를 발송함
+        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+          setServerError('이미 가입된 이메일입니다. 로그인 페이지로 이동해주세요.')
+          setOtpSending(false)
+          return
+        }
+        // 그 외 에러는 그래도 OTP가 발송됐을 수 있으므로 계속 진행
       }
 
       setOtpSent(true)
@@ -138,19 +134,17 @@ export default function SignUpPage() {
     }
   }
 
-  // OTP 재전송
+  // OTP 재전송 (signUp 재호출)
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return
     const email = getValues('email')
+    const password = getValues('password')
     setOtpError('')
     setOtpValues(['', '', '', '', '', ''])
     setResendCooldown(60)
 
     const supabase = createClient()
-    await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    })
+    await supabase.auth.signUp({ email, password })
     setTimeout(() => otpRefs.current[0]?.focus(), 100)
   }
 
@@ -182,7 +176,7 @@ export default function SignUpPage() {
     otpRefs.current[Math.min(pasted.length, 5)]?.focus()
   }
 
-  // OTP 검증
+  // OTP 검증 → type: 'signup' 사용
   const handleVerifyOtp = async () => {
     const code = otpValues.join('')
     if (code.length < 6) {
@@ -196,10 +190,10 @@ export default function SignUpPage() {
     const supabase = createClient()
     const email = getValues('email')
 
-    const { error } = await supabase.auth.verifyOtp({
+    const { data: { session }, error } = await supabase.auth.verifyOtp({
       email,
       token: code,
-      type: 'email',
+      type: 'signup',
     })
 
     if (error) {
@@ -208,54 +202,16 @@ export default function SignUpPage() {
       return
     }
 
-    // OTP 인증 성공: 세션 삭제 (아직 회원가입 완료 아님)
-    await supabase.auth.signOut()
-    setOtpVerified(true)
-    setOtpVerifying(false)
-    setStep(3)
-  }
-
-  // 최종 제출: 회원가입
-  const onSubmit = async (data: SignUpFormData) => {
-    if (!otpVerified) {
-      setServerError('이메일 인증을 먼저 완료해주세요.')
-      return
-    }
-
-    setServerError('')
-    const supabase = createClient()
-
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        emailRedirectTo: undefined, // OTP로 인증했으므로 링크 불필요
-        data: {
-          name: data.name,
-          student_id: data.student_id,
-          department_id: data.department_id,
-        },
-      },
-    })
-
-    if (signUpError) {
-      if (signUpError.message.includes('already registered')) {
-        setServerError('이미 가입된 이메일입니다. 로그인 페이지로 이동해주세요.')
-      } else {
-        setServerError(signUpError.message)
-      }
-      return
-    }
-
-    if (authData.user) {
-      // users 테이블에 프로필 생성
+    // OTP 인증 성공 → users 테이블에 프로필 생성
+    if (session?.user) {
+      const data = getValues()
       const { error: profileError } = await (supabase.from('users') as any).insert({
-        id: authData.user.id,
+        id: session.user.id,
         name: data.name,
         student_id: data.student_id,
         department_id: data.department_id,
         email: data.email,
-        email_verified: true, // OTP로 이미 인증 완료
+        email_verified: true,
         role: 'student',
       })
 
@@ -264,7 +220,13 @@ export default function SignUpPage() {
       }
     }
 
+    setOtpVerifying(false)
     router.push('/home')
+  }
+
+  // 최종 제출 (form submit) - OTP 검증에서 이미 처리하므로 fallback만 유지
+  const onSubmit = async () => {
+    // OTP 검증 완료 시 handleVerifyOtp에서 라우팅까지 처리됨
   }
 
   return (
@@ -277,8 +239,8 @@ export default function SignUpPage() {
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-black gradient-text">CBNU MATCH</h1>
-            <p className="text-slate-400 text-sm mt-1">충북대학교 재학생 전용</p>
+            <h1 className="text-3xl font-black gradient-text">MATCH</h1>
+            <p className="text-slate-400 text-sm mt-1">매칭 플랫폼</p>
           </Link>
         </div>
 
@@ -287,18 +249,20 @@ export default function SignUpPage() {
           {STEPS.map((label, idx) => (
             <div key={idx} className="flex items-center">
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${idx < step
+                className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${
+                  idx < step
                     ? 'bg-green-600 text-white'
                     : idx === step
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-800 text-slate-500'
-                  }`}
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-800 text-slate-500'
+                }`}
               >
                 {idx < step ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
               </div>
               <span
-                className={`ml-1.5 text-xs hidden sm:block ${idx < step ? 'text-green-400' : idx === step ? 'text-indigo-400' : 'text-slate-600'
-                  }`}
+                className={`ml-1.5 text-xs hidden sm:block ${
+                  idx < step ? 'text-green-400' : idx === step ? 'text-indigo-400' : 'text-slate-600'
+                }`}
               >
                 {label}
               </span>
@@ -416,7 +380,7 @@ export default function SignUpPage() {
               </div>
             )}
 
-            {/* ── STEP 1: 이메일 입력 ── */}
+            {/* ── STEP 1: 이메일 & 비밀번호 입력 ── */}
             {step === 1 && (
               <div className="space-y-4">
                 <button
@@ -426,12 +390,13 @@ export default function SignUpPage() {
                 >
                   <ChevronLeft className="w-4 h-4" /> 이전
                 </button>
-                <h2 className="text-xl font-bold text-white mb-4">이메일 인증</h2>
+                <h2 className="text-xl font-bold text-white mb-4">이메일 & 비밀번호</h2>
 
                 <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm">
                   📧 입력하신 이메일로 6자리 인증번호를 발송합니다
                 </div>
 
+                {/* 이메일 */}
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1.5">이메일</label>
                   <div className="relative">
@@ -449,6 +414,63 @@ export default function SignUpPage() {
                     />
                   </div>
                   {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+                </div>
+
+                {/* 비밀번호 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">비밀번호</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="비밀번호를 입력하세요"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm"
+                      style={{
+                        background: 'rgba(15,15,26,0.8)',
+                        borderColor: errors.password ? '#ef4444' : '#1e293b',
+                        color: '#f1f5f9',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-slate-500 text-xs mt-1">비밀번호는 최소 6자리 이상이어야 합니다</p>
+                  {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
+                </div>
+
+                {/* 비밀번호 확인 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">비밀번호 확인</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      {...register('confirmPassword')}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="비밀번호를 다시 입력하세요"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm"
+                      style={{
+                        background: 'rgba(15,15,26,0.8)',
+                        borderColor: errors.confirmPassword ? '#ef4444' : '#1e293b',
+                        color: '#f1f5f9',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-red-400 text-xs mt-1">{errors.confirmPassword.message}</p>
+                  )}
                 </div>
 
                 {serverError && (
@@ -508,8 +530,8 @@ export default function SignUpPage() {
                         borderColor: otpError
                           ? '#ef4444'
                           : val
-                            ? '#4f46e5'
-                            : '#1e293b',
+                          ? '#4f46e5'
+                          : '#1e293b',
                         color: '#f1f5f9',
                         boxShadow: val ? '0 0 0 2px rgba(79,70,229,0.2)' : 'none',
                       }}
@@ -520,6 +542,12 @@ export default function SignUpPage() {
                 {otpError && (
                   <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                     {otpError}
+                  </div>
+                )}
+
+                {serverError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                    {serverError}
                   </div>
                 )}
 
@@ -552,85 +580,6 @@ export default function SignUpPage() {
                       : '인증번호 재전송'}
                   </button>
                 </div>
-              </div>
-            )}
-
-            {/* ── STEP 3: 비밀번호 설정 ── */}
-            {step === 3 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-400" />
-                  <span className="text-green-400 text-sm font-medium">이메일 인증 완료</span>
-                </div>
-                <h2 className="text-xl font-bold text-white mb-4">비밀번호 설정</h2>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">비밀번호</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      {...register('password')}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="8자 이상, 영문+숫자+특수문자"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm"
-                      style={{
-                        background: 'rgba(15,15,26,0.8)',
-                        borderColor: errors.password ? '#ef4444' : '#1e293b',
-                        color: '#f1f5f9',
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">비밀번호 확인</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      {...register('confirmPassword')}
-                      type="password"
-                      placeholder="비밀번호를 다시 입력하세요"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm"
-                      style={{
-                        background: 'rgba(15,15,26,0.8)',
-                        borderColor: errors.confirmPassword ? '#ef4444' : '#1e293b',
-                        color: '#f1f5f9',
-                      }}
-                    />
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-red-400 text-xs mt-1">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
-
-                {serverError && (
-                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                    {serverError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 rounded-xl font-semibold text-white btn-glow flex items-center justify-center gap-2 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
-                >
-                  {isSubmitting ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> 가입 중...</>
-                  ) : (
-                    '회원가입 완료'
-                  )}
-                </button>
               </div>
             )}
           </form>

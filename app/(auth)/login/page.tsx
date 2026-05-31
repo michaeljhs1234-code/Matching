@@ -56,8 +56,8 @@ export default function LoginPage() {
         {/* 로고 */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-black gradient-text">CBNU MATCH</h1>
-            <p className="text-slate-400 text-sm mt-1">충북대학교 매칭 플랫폼</p>
+            <h1 className="text-3xl font-black gradient-text">MATCH</h1>
+            <p className="text-slate-400 text-sm mt-1">매칭 플랫폼</p>
           </Link>
         </div>
 
@@ -69,14 +69,14 @@ export default function LoginPage() {
             {/* 이메일 */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                학교 이메일
+                이메일
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   {...register('email')}
                   type="email"
-                  placeholder="student@chungbuk.ac.kr"
+                  placeholder="example@gmail.com"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all"
                   style={{
                     background: 'rgba(15,15,26,0.8)',

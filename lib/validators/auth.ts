@@ -14,10 +14,7 @@ export const signUpSchema = z.object({
     .email('올바른 이메일 형식이 아닙니다'),
   password: z
     .string()
-    .min(8, '비밀번호는 8자 이상이어야 합니다')
-    .regex(/[A-Za-z]/, '영문자를 포함해야 합니다')
-    .regex(/[0-9]/, '숫자를 포함해야 합니다')
-    .regex(/[^A-Za-z0-9]/, '특수문자를 포함해야 합니다'),
+    .min(6, '비밀번호는 6자 이상이어야 합니다'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',
